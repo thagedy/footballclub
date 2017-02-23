@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head id="Head1">
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta name="viewport" content="width=device-width, minimum-scale=1, maximum-scale=1">
+<link rel="stylesheet" href="../styles/mobile.css">
+<title>	订单支付</title>
+<script src="../scripts/jquery-1.9.1.min.js"></script>
+<style>
+#getYzm, .getYzm
+{
+    background:none;
+    padding:0;
+}
+   .topic_ipt input::-webkit-outer-spin-button, .topic_ipt input::-webkit-inner-spin-button {
+        -webkit-appearance: none !important;
+        outline:none;
+    }
+</style>
+<body>
+    <div class="i_header">
+        <div class="header_c">
+            <span id="hrefLogo" class="logo"> 中关村三小足球项目在线支付</span>
+        </div>
+    </div>
+    
+    <div class="content">
+        <div class="header_m">
+            <span class="logo3"> 报名信息填写:</span>
+        </div>
+        
+        <form name="form1" method="post" action="regnew.aspx" id="form1" data-ajax="false">
+        <ul class="unstyled matrix_ul">
+            <li>
+                <div class="topic_input">
+                    <div class="topic_bel">
+                        <i class="ico_phone"></i>
+                    </div>
+                    <div class="topic_ipt">
+                        <input name="XsName" id="XsName" placeholder="学生姓名" class="btx" >
+                    </div>
+                </div>
+            </li>
+           
+             <li id="liMobile">
+                <div class="topic_input">
+                    <div class="topic_bel">
+                        <i class="ico_yzm"></i>
+                    </div>
+                    <div class="topic_ipt">
+                        <input name="XsYear" id="XsYear" pattern="[0-9]*" placeholder="学生班级（如“三年级2班”）" class="btx" >
+                    </div>
+                </div>
+
+            </li>
+             <li>
+                <div class="topic_input">
+                    <div class="topic_bel">
+                        <i class="ico_p"></i>
+                    </div>
+                    <div class="topic_ipt">
+                        <input name="JxName" id="JxName" placeholder="家长姓名" class="btx" type="password">
+                    </div>
+                </div>
+            </li>
+             <li>
+                 <div class="topic_input">
+                     <div class="topic_bel">
+                         <i class="ico_p"></i>
+                     </div>
+                     <div class="topic_ipt">
+                         <input name="JzIphone" id="JzIphone" pattern="[0-9]*" placeholder="家长手机号" class="btx" type="number">
+                             </div>
+                 </div>
+             </li>
+             
+        </ul>
+         <script type="text/javascript">
+            
+             function checkMobile() {
+                 var lbMsg = document.getElementById("lbMsg");
+                 var JzIphone = document.getElementById("JzIphone").value;
+                 var patrn = /^\d{11}$/;
+                 if (!patrn.exec(val)) {
+                     lbMsg.innerHTML = "请输入正确的手机号码！";
+                     return false;
+                 }
+                 var JzName = document.getElementById("JzName").value;
+                 var XsName = document.getElementById("XsName").value;
+                 var XsYear = document.getElementById("XsYear").value;
+                 
+                 if (JzName == null || JzName == "" || JzName == undefined) {
+                     lbMsg.innerHTML = "家长姓名不能为空！";
+                     return false;
+                 }
+                 if (XsName == null || XsName == "" || XsName == undefined) {
+                     lbMsg.innerHTML = "学生姓名不能为空！";
+                     return false;
+                 }
+                 if (XsYear == null || XsYear == "" || XsYear == undefined) {
+                     lbMsg.innerHTML = "学生班级不能为空！";
+                     return false;
+                 }
+                 
+                 
+                 
+                 return true;
+             }
+           </script>
+         
+         <div class="header_m">
+             <span class="logo5"> 报名费用: 10元</span>
+         </div>
+         
+        <a onclick="return checkMobile();" id="btnSubmit" class="button orange" data-role="button" href="javascript:__doPostBack('btnSubmit','')">微信支付</a>
+        
+        <div style="clear:both;padding-top:15px;"> <span id="lbMsg" style="color:Red;"></span>
+        </div>
+
+
+
+</body></html>
