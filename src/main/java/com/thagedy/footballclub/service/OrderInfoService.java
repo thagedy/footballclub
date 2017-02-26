@@ -11,4 +11,8 @@ public interface OrderInfoService {
     ClubResult listOrderInfo(int page,int count,String key);
 
     ClubResult saveOrderInfo(OrderInfo rderInfo);
+
+    OrderInfo getOrderInfoByOrderNo(String orderNo);
+
+    ClubResult saveOrUpdateOrderInfo(OrderInfo orderInfo);
 }

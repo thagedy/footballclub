@@ -1,10 +1,8 @@
 package com.thagedy.footballclub.controller;
 
-import com.thagedy.footballclub.Constants;
 import com.thagedy.footballclub.common.pojo.ClubResult;
-import com.thagedy.footballclub.common.util.JsonUtils;
 import com.thagedy.footballclub.common.util.Sha1Util;
-import com.thagedy.footballclub.common.util.WxConfig;
+import com.thagedy.footballclub.common.util.SignUtil;
 import com.thagedy.footballclub.common.util.wechat.CommonUtil;
 import com.thagedy.footballclub.common.util.wechat.RequestHandler;
 import com.thagedy.footballclub.common.util.wechat.TxtUtil;
@@ -18,10 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -32,7 +27,7 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.thagedy.footballclub.common.util.WxConfig.baseUrl;
+import static com.thagedy.footballclub.config.WxPayConfig.baseUrl;
 
 /**
  * Created by Kaijia Wei on 2017/2/21.
@@ -47,10 +42,32 @@ public class WeChatController {
     @Autowired
     private OrderInfoService orderInfoService;
 
+    @RequestMapping("/wx/mock")
+    public ClubResult mock(HttpServletRequest request,HttpServletResponse response) throws IOException {
+        return ClubResult.ok();
+    }
 
-    @RequestMapping("/")
-    public void test(HttpServletRequest request,HttpServletResponse response){
-            output(response,"success");
+    @RequestMapping("/wx")
+    public void test(HttpServletRequest request,HttpServletResponse response) throws IOException {
+
+        // 微信加密签名
+        String signature = request.getParameter("signature");
+        // 时间戳
+        String timestamp = request.getParameter("timestamp");
+        // 随机数
+        String nonce = request.getParameter("nonce");
+        // 随机字符串
+        String echostr = request.getParameter("echostr");
+
+
+        PrintWriter out = response.getWriter();
+        // 通过检验signature对请求进行校验，若校验成功则原样返回echostr，表示接入成功，否则接入失败
+        if (SignUtil.checkSignature(signature, timestamp, nonce)) {
+            System.out.println(echostr);
+            out.print(echostr);
+        }
+        out.close();
+        out = null;
     }
 
     @GetMapping("/userAuth")
@@ -59,12 +76,11 @@ public class WeChatController {
             //授权后要跳转的链接
             String backUri = baseUrl + "/wx/getOpenId";
             //URLEncoder.encode 后可以在backUri 的url里面获取传递的所有参数
-            backUri = URLEncoder.encode(backUri);
+            backUri = URLEncoder.encode(backUri);// TODO: 2017/2/26
             //scope 参数视各自需求而定，这里用scope=snsapi_base 不弹出授权页面直接授权目的只获取统一支付接口的openid
             String url = "https://open.weixin.qq.com/connect/oauth2/authorize?" +
-                    "appid=" + WxConfig.appid +
-                    "&redirect_uri=" +
-                    backUri+
+                    "appid=" + WxPayConfig.appid +
+                    "&redirect_uri=" + backUri +
                     "&response_type=code&scope=snsapi_userinfo&state=123#wechat_redirect";
             System.out.println("微信授权url:" + url);
             response.sendRedirect(url);
@@ -82,7 +98,7 @@ public class WeChatController {
     @GetMapping("/getOpenId")
     public void getOpenId(HttpServletRequest request,HttpServletResponse response) {
 
-        String url = "http://weixin.footballclub.xyz/view/payment.html?openid=";
+        String url = baseUrl + "/Views/payment.html?openid=";
         //网页授权后获取传递的参数
         String code = request.getParameter("code");
         System.out.println("code:" + code);
@@ -90,7 +106,7 @@ public class WeChatController {
         //获取统一下单需要的openid
         String openId = "";
         String URL = "https://api.weixin.qq.com/sns/oauth2/access_token?appid="
-                + WxConfig.appid + "&secret=" + WxConfig.appsecret + "&code=" + code + "&grant_type=authorization_code";
+                + WxPayConfig.appid + "&secret=" + WxPayConfig.appsecret + "&code=" + code + "&grant_type=authorization_code";
         System.out.println("URL:" + URL);
         JSONObject jsonObject = CommonUtil.httpsRequest(URL, "GET", null);
         if (null != jsonObject) {
@@ -106,23 +122,23 @@ public class WeChatController {
         }
     }
 
-    @GetMapping("/getPrePayNo")
+    @PostMapping("/getPrePayNo")
     public ClubResult getPrePayno(@RequestBody OrderInfo orderInfo,HttpServletRequest request, HttpServletResponse response) {
 
         String orderNo=this.genOrderNo();
         //随机数
         String nonce_str = UUID.randomUUID().toString().replaceAll("-", "");
         //商品描述
-        String body = this.genOrderNo();;
+        String body = this.genOrderNo();
         //商户订单号
         String out_trade_no = orderNo;
         //订单生成的机器 IP
         String spbill_create_ip = request.getRemoteAddr();
         //总金额
         //TODO
-        Integer total_fee = Integer.parseInt(totalFee)*100;
+        Integer total_fee = Integer.parseInt(totalFee);
         //商户号
-        //String mch_id = partner;
+        String mch_id = WxPayConfig.partner;
         //子商户号  非必输
         //String sub_mch_id="";
         //设备号   非必输
@@ -145,15 +161,16 @@ public class WeChatController {
 
         SortedMap<String, String> packageParams = new TreeMap<String, String>();
         packageParams.put("appid", WxPayConfig.appid);
+        packageParams.put("body", body);
         packageParams.put("mch_id", WxPayConfig.partner);
         packageParams.put("nonce_str", nonce_str);
-        packageParams.put("body", body);
-        packageParams.put("out_trade_no", out_trade_no);
-        packageParams.put("total_fee", total_fee+"");
-        packageParams.put("spbill_create_ip", spbill_create_ip);
         packageParams.put("notify_url", notify_url);
-        packageParams.put("trade_type", WxPayConfig.trade_type);
         packageParams.put("openid", orderInfo.getWxAppid());
+        packageParams.put("out_trade_no", out_trade_no);
+        packageParams.put("spbill_create_ip", spbill_create_ip);
+        packageParams.put("total_fee", total_fee+"");
+        packageParams.put("trade_type", WxPayConfig.trade_type);
+
 
         RequestHandler reqHandler = new RequestHandler(request, response);
         reqHandler.init(WxPayConfig.appid, WxPayConfig.appsecret, WxPayConfig.partnerkey);
@@ -166,7 +183,7 @@ public class WeChatController {
                 "<nonce_str>"+nonce_str+"</nonce_str>"+
                 "<sign>"+sign+"</sign>"+
                 "<body><![CDATA["+body+"]]></body>"+
-                "<attach>"+ JsonUtils.objectToJson(orderInfo)+"</attach>"+
+                //"<attach>"+ JsonUtils.objectToJson(orderInfo)+"</attach>"+
                 "<out_trade_no>"+out_trade_no+"</out_trade_no>"+
                 "<total_fee>"+total_fee+""+"</total_fee>"+
                 "<spbill_create_ip>"+spbill_create_ip+"</spbill_create_ip>"+
@@ -218,23 +235,19 @@ public class WeChatController {
          *  返回给前端参数，跳蛛转支付页又前端发起
          */
         Map<String,Object> resultMap = new HashMap<>();
-        resultMap.put("appid", WxPayConfig.appid);
+        resultMap.put("appId", WxPayConfig.appid);
         resultMap.put("timeStamp", timestamp);
         resultMap.put("nonceStr", nonce_str);
-        resultMap.put("packageValue", packages);
-        resultMap.put("sign", finalsign);
+        resultMap.put("package", packages);
+        resultMap.put("paySign", finalsign);
         resultMap.put("bizOrderId", orderNo);
         resultMap.put("orderId", orderNo);
         resultMap.put("payPrice", total_fee);
+        resultMap.put("signType",WxPayConfig.signType);
 		return ClubResult.ok(resultMap);
     }
 
 
-
-    @GetMapping("/getPayId")
-    public ClubResult getPayId(){
-        return  ClubResult.ok("HELLO WORLD!!!");
-    }
 
 
 
@@ -271,12 +284,15 @@ public class WeChatController {
                         if("SUCCESS".equals(return_code)){
                             String out_trade_no = (String)resultMap.get("out_trade_no");
                             System.out.println("weixin pay sucess,out_trade_no:"+out_trade_no);
-                            //处理支付成功以后的逻辑，这里是写入相关信息到文本文件里面，如果有订单的处理订单
+
                             try{
-                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh24:mi:ss");
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
                                 String content = out_trade_no+"        "+sdf.format(new Date());
                                 String fileUrl = System.getProperty("user.dir") + File.separator+"WebContent" + File.separator + "data" + File.separator + "order.txt";
                                 TxtUtil.writeToTxt(content, fileUrl);
+                                String checkXml = "<xml><return_code><![CDATA[SUCCESS]]></return_code>"+
+                                        "<return_msg><![CDATA[OK]]></return_msg></xml>";
+                                output(response,checkXml);
                             }catch(Exception e){
                                 e.printStackTrace();
                             }
@@ -310,57 +326,46 @@ public class WeChatController {
      * @return
      * @throws IOException
      */
-    @RequestMapping("/checkSucess")
-    public ClubResult checkSucess( HttpServletRequest request,
+    @PostMapping("/checkSucess")
+    public ClubResult checkSucess(@RequestBody OrderInfo orderInfo, HttpServletRequest request,
                                   HttpServletResponse response) throws IOException{
-        PayResult payResult = new PayResult();
-        String id = request.getParameter("orderId");
-        System.out.println("toWXPaySuccess, orderId: " + id);
-        try {
-            Map resultMap = WeixinPayUtil.checkWxOrderPay(id);
+        PayResult pageResult = new PayResult();
+       /* try {
+            Map resultMap = WeixinPayUtil.checkWxOrderPay(orderInfo.getOrderNo());
             System.out.println("resultMap:" + resultMap);
             String return_code = (String)resultMap.get("return_code");
             String result_code = (String)resultMap.get("result_code");
             System.out.println("return_code:" + return_code + ",result_code:" + result_code);
             if("SUCCESS".equals(return_code)){
                 if("SUCCESS".equals(result_code)){
-//                    model.addAttribute("orderId", id);
-//                    model.addAttribute("payResult", "1");
-                    String trade_state = (String)resultMap.get("trade_state");
-//                    if ("SUCCESS".equals(trade_state)){
-//
-//                    }
-                    OrderInfo orderInfo = JsonUtils.jsonToPojo((String) resultMap.get("attach"),OrderInfo.class);
+                    orderInfo.setCtime(new Date());
                     orderInfoService.saveOrderInfo(orderInfo);
-                    payResult.setOrderNo(id);
-                    payResult.setPayStatus(Constants.SUCC_PAY_STATUS);
-                    return ClubResult.ok(payResult);
+                    pageResult.setPayStatus(1);
+                    pageResult.setOrderNo(orderInfo.getOrderNo());
+                    return ClubResult.ok(pageResult);
                 }else{
-
                     String err_code = (String)resultMap.get("err_code");
                     String err_code_des = (String)resultMap.get("err_code_des");
                     System.out.println("weixin resultCode:"+result_code+",err_code:"+err_code+",err_code_des:"+err_code_des);
-                    logger.info("weixin resultCode:"+result_code+",err_code:"+err_code+",err_code_des:"+err_code_des);
-//                    model.addAttribute("err_code", err_code);
-//                    model.addAttribute("err_code_des", err_code_des);
-//                    model.addAttribute("payResult", "0");
-                    payResult.setOrderNo(id);
-                    payResult.setPayStatus(Constants.FAIL_PAY_STATUS);
-                    payResult.setErrCode(err_code);
-                    payResult.setErrCodeDes(err_code_des);
-                    return ClubResult.ok(payResult);
+
+                    pageResult.setPayStatus(0);
+                    pageResult.setOrderNo(orderInfo.getOrderNo());
+                    pageResult.setErrCode(err_code);
+                    pageResult.setErrCodeDes(err_code_des);
+                    return ClubResult.ok(pageResult);
                 }
             }else{
-//                model.addAttribute("payResult", "0");
-//                model.addAttribute("err_code_des", "通信错误");
-                return ClubResult.error("通信错误");
+               return ClubResult.error("通信错误");
             }
         } catch (Exception e) {
             e.printStackTrace();
-            logger.error("checkSuccess 方法失败",e);
-            return ClubResult.error("网络异常");
-        }
-        //return "/payResult";
+        }*/
+        orderInfo.setCtime(new Date());
+        orderInfoService.saveOrderInfo(orderInfo);
+        pageResult.setPayStatus(1);
+        pageResult.setOrderNo(orderInfo.getOrderNo());
+        return ClubResult.ok(pageResult);
+
     }
 
     /**

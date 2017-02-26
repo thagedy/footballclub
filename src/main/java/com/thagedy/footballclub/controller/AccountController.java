@@ -6,6 +6,7 @@ import com.thagedy.footballclub.service.UserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -18,7 +19,8 @@ public class AccountController {
     private UserInfoService userInfoService;
 
 
-    @PostMapping("/login")
+    @PostMapping("/aj/login")
+    @ResponseBody
     public  ClubResult login(@RequestBody AdminUser adminUser){
         ClubResult login = userInfoService.login(adminUser);
         return  login;

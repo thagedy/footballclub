@@ -2,6 +2,7 @@ package com.thagedy.footballclub.common.util.wechat;
 
 import com.thagedy.footballclub.common.util.MD5Util;
 import com.thagedy.footballclub.common.util.wechat.http.HttpClientConnectionManager;
+import com.thagedy.footballclub.config.WxPayConfig;
 import com.thagedy.footballclub.pojo.weixin.dto.WeixinInfoDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
@@ -273,16 +274,17 @@ public class WeixinPayUtil {
 		String sign = "";
 		SortedMap<String, String> storeMap = new TreeMap<String, String>();
 		storeMap.put("out_trade_no", orderId); // 商户 后台的贸易单号
-		storeMap.put("appid", "wx5e45586116813f60"); // appid
-		storeMap.put("mch_id", "1251135401"); // 商户号
+		storeMap.put("appid", WxPayConfig.appid); // appid
+		storeMap.put("mch_id", WxPayConfig.partner); // 商户号
 		storeMap.put("nonce_str", nonce_str); // 随机数
 		sign = createSign(storeMap);
 		
-		String xml = "<xml><appid>wx5e45586116813f60</appid><mch_id>1251135401</mch_id>"+
+		String xml = "<xml><appid>"+WxPayConfig.appid+"</appid><mch_id>"+ WxPayConfig.partner+"</mch_id>"+
 					"<nonce_str>" + nonce_str + "</nonce_str>"+
                     "<out_trade_no>"+orderId+"</out_trade_no>"+
                     "<sign>"+sign+"</sign></xml>";
 		String resultMsg = getTradeOrder("https://api.mch.weixin.qq.com/pay/orderquery", xml);
+		System.out.println(xml);
 	    System.out.println("orderquery,result:" + resultMsg);
 		if(StringUtils.isNotBlank(resultMsg)){
 	    	Map resultMap = WeixinPayUtil.doXMLParse(resultMsg);

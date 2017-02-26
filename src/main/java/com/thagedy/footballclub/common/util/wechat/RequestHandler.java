@@ -2,6 +2,7 @@ package com.thagedy.footballclub.common.util.wechat;
 
 
 import com.thagedy.footballclub.common.util.MD5Util;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -162,52 +163,21 @@ public class RequestHandler {
 			Map.Entry entry = (Map.Entry) it.next();
 			String k = (String) entry.getKey();
 			String v = (String) entry.getValue();
-			if (null != v && !"".equals(v) && !"sign".equals(k)
+			if (StringUtils.isNoneBlank(v) && !"sign".equals(k)
 					&& !"key".equals(k)) {
 				sb.append(k + "=" + v + "&");
 			}
 		}
 		sb.append("key=" + this.getKey());
 		System.out.println("md5 sb:" + sb);
-		String sign = MD5Util.MD5Encode(sb.toString(), this.charset)
-				.toUpperCase();
+		String sign = MD5Util.MD5Encode(sb.toString(), this.charset).toUpperCase();
 		System.out.println("packge签名:" + sign);
 		return sign;
 
 	}
-	/**
-	 * 创建package签名
-	 */
-	/*public boolean createMd5Sign(String signParams) {
-		StringBuffer sb = new StringBuffer();
-		Set es = this.parameters.entrySet();
-		Iterator it = es.iterator();
-		while (it.hasNext()) {
-			Map.Entry entry = (Map.Entry) it.next();
-			String k = (String) entry.getKey();
-			String v = (String) entry.getValue();
-			if (!"sign".equals(k) && null != v && !"".equals(v)) {
-				sb.append(k + "=" + v + "&");
-			}
-		}
 
-		// 算出摘要
-		String enc = TenpayUtil.getCharacterEncoding(this.request,
-				this.response);
-		String sign = MD5Util.MD5Encode(sb.toString(), enc).toLowerCase();
-
-		String tenpaySign = this.getParameter("sign").toLowerCase();
-
-		// debug信息
-		this.setDebugInfo(sb.toString() + " => sign:" + sign + " tenpaySign:"
-				+ tenpaySign);
-
-		return tenpaySign.equals(sign);
-	}*/
-
-	
-
-    //输出XML
+	// TODO: 2017/2/26 改善解析方法，查看http://blog.csdn.net/jrainbow/article/details/49779277
+	//输出XML
 	   public String parseXML() {
 		   StringBuffer sb = new StringBuffer();
 	       sb.append("<xml>");
@@ -218,7 +188,6 @@ public class RequestHandler {
 				String k = (String)entry.getKey();
 				String v = (String)entry.getValue();
 				if(null != v && !"".equals(v) && !"appkey".equals(k)) {
-					
 					sb.append("<" + k +">" + getParameter(k) + "</" + k + ">\n");
 				}
 			}

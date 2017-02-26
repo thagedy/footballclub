@@ -15,7 +15,7 @@ import java.util.Date;
  * Created by Kaijia Wei on 2017/2/21.
  */
 @Controller
-@RequestMapping("/order")
+@RequestMapping("/aj/order")
 public class OrderInfoController {
 
     @Autowired
@@ -35,8 +35,8 @@ public class OrderInfoController {
     }
 
     @RequestMapping(value = "/list",method = RequestMethod.GET)
-    public ClubResult listPayRecord(int page,int count,String key){
-        ClubResult clubResult = orderInfoService.listOrderInfo(1, 10, key==null?null:key.trim());
+    public ClubResult listPayRecord(){
+        ClubResult clubResult = orderInfoService.listOrderInfo(1, 10, null);
         return clubResult;
     }
 }
