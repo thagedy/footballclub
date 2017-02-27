@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -361,10 +362,14 @@ public class WeChatController {
             e.printStackTrace();
         }*/
         orderInfo.setCtime(new Date());
+        //转换成元
+        BigDecimal v = new BigDecimal(totalFee);
+        orderInfo.setPayFee(v.divide(new BigDecimal(100)));
         orderInfoService.saveOrderInfo(orderInfo);
         pageResult.setPayStatus(1);
         pageResult.setOrderNo(orderInfo.getOrderNo());
         return ClubResult.ok(pageResult);
+
 
     }
 
