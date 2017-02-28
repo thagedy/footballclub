@@ -27,4 +27,6 @@ public interface OrderInfoMapper {
     int updateByPrimaryKeySelective(OrderInfo record);
 
     int updateByPrimaryKey(OrderInfo record);
+
+    List<OrderInfo> selectByKey(@Param("keyword") String key);
 }

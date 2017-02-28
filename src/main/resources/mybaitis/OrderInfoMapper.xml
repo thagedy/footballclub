@@ -196,6 +196,18 @@
       <include refid="Example_Where_Clause" />
     </if>
   </select>
+  <select id="selectByKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    SELECT
+    *
+    FROM
+    order_info
+    WHERE
+    student_class LIKE CONCAT(CONCAT('%', #{keyword}), '%')
+    or student_school LIKE CONCAT(CONCAT('%', #{keyword}), '%')
+    or studen_name LIKE CONCAT(CONCAT('%', #{keyword}), '%')
+    or parent_name LIKE CONCAT(CONCAT('%', #{keyword}), '%')
+    or phone_number LIKE CONCAT(CONCAT('%', #{keyword}), '%')
+  </select>
   <update id="updateByExampleSelective" parameterType="map">
     update order_info
     <set>

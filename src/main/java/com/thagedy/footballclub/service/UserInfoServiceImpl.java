@@ -7,6 +7,7 @@ import com.thagedy.footballclub.pojo.AdminUserExample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 /**
@@ -16,6 +17,9 @@ import java.util.List;
 public class UserInfoServiceImpl implements UserInfoService {
     @Autowired
     private AdminUserMapper userInfoMapper;
+    @Autowired
+    private HttpServletRequest request;
+
     @Override
     public ClubResult login(AdminUser userInfo) {
         AdminUserExample userInfoExample = new AdminUserExample();
@@ -24,6 +28,8 @@ public class UserInfoServiceImpl implements UserInfoService {
         if (userInfos != null && userInfos.size()>0){
             AdminUser userInfo1 = userInfos.get(0);
             if (userInfo1.getPassword().equals(userInfo.getPassword())){
+                userInfo1.setPassword(null);
+                request.getSession().setAttribute("loginUser",userInfo1);
                 return ClubResult.ok();
             }
         }

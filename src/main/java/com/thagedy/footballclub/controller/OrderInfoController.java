@@ -5,8 +5,7 @@ import com.thagedy.footballclub.pojo.OrderInfo;
 import com.thagedy.footballclub.service.OrderInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -14,7 +13,7 @@ import java.util.Date;
 /**
  * Created by Kaijia Wei on 2017/2/21.
  */
-@Controller
+@RestController
 @RequestMapping("/aj/order")
 public class OrderInfoController {
 
@@ -22,7 +21,7 @@ public class OrderInfoController {
     private OrderInfoService orderInfoService;
 
 
-    @RequestMapping(value = "/save" , method = RequestMethod.POST)
+    @PostMapping(value = "/save")
     public ClubResult insertPayRecord(){
         OrderInfo payRecord = new OrderInfo();
         payRecord.setPayFee(new BigDecimal(10000));
@@ -34,9 +33,9 @@ public class OrderInfoController {
         return clubResult;
     }
 
-    @RequestMapping(value = "/list",method = RequestMethod.GET)
-    public ClubResult listPayRecord(){
-        ClubResult clubResult = orderInfoService.listOrderInfo(1, 10, null);
+    @GetMapping(value = "/list")
+    public ClubResult listPayRecord(int page,int count,String key){
+        ClubResult clubResult = orderInfoService.listOrderInfo(1, 1000, key);
         return clubResult;
     }
 }

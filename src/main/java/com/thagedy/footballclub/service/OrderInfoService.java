@@ -15,4 +15,6 @@ public interface OrderInfoService {
     OrderInfo getOrderInfoByOrderNo(String orderNo);
 
     ClubResult saveOrUpdateOrderInfo(OrderInfo orderInfo);
+
+    ClubResult listByOpenId(int start,int count,String openid);
 }

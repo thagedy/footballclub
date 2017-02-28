@@ -7,10 +7,12 @@ import com.thagedy.footballclub.common.pojo.PageResult;
 import com.thagedy.footballclub.dao.OrderInfoMapper;
 import com.thagedy.footballclub.pojo.OrderInfo;
 import com.thagedy.footballclub.pojo.OrderInfoExample;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,18 +24,7 @@ public class OrderInfoServiceImpl implements OrderInfoService {
     @Resource
     private OrderInfoMapper orderInfoMapper;
 
-    @Override
-    public ClubResult listOrderInfo(int page, int count, String key) {
-        PageHelper.startPage(page,1000);
-        OrderInfoExample payRecordExample = new OrderInfoExample();
-        payRecordExample.createCriteria().andParentNameEqualTo(key);
-        List<OrderInfo> payRecords = orderInfoMapper.selectByExample(payRecordExample);
-        PageInfo<OrderInfo> pageInfo = new PageInfo(payRecords);
-        PageResult pageResult = new PageResult();
-        pageResult.setData(payRecords);
-        pageResult.setTotal(pageInfo.getTotal());
-        return ClubResult.ok(pageResult);
-    }
+
 
     @Override
     public ClubResult saveOrderInfo(OrderInfo payRecord) {
@@ -66,5 +57,40 @@ public class OrderInfoServiceImpl implements OrderInfoService {
             orderInfoMapper.updateByExampleSelective(orderInfo,orderInfoExample);
         }
         return null;
+    }
+
+    @Override
+    public ClubResult listOrderInfo(int page, int count, String key) {
+        List<OrderInfo> payRecords = null;
+        PageHelper.startPage(page,count);
+        if (StringUtils.isBlank(key)){
+            orderInfoMapper.selectByKey(key);
+        }else {
+            OrderInfoExample payRecordExample = new OrderInfoExample();
+            payRecordExample.createCriteria();
+            payRecords = orderInfoMapper.selectByExample(payRecordExample);
+        }
+        PageInfo<OrderInfo> pageInfo = new PageInfo(payRecords);
+        PageResult pageResult = new PageResult();
+        pageResult.setData(payRecords);
+        pageResult.setTotal(pageInfo.getTotal());
+        return ClubResult.ok(pageResult);
+    }
+
+
+    @Override
+    public ClubResult listByOpenId(int start,int count,String openid) {
+        PageHelper.startPage(start,count);
+        OrderInfoExample payRecordExample = new OrderInfoExample();
+        payRecordExample.createCriteria().andWxAppidEqualTo(openid);
+        List<OrderInfo> orderInfos = orderInfoMapper.selectByExample(payRecordExample);
+        if (orderInfos==null){
+            orderInfos = new ArrayList<>();
+        }
+        PageInfo<OrderInfo> pageInfo = new PageInfo(orderInfos);
+        PageResult pageResult = new PageResult();
+        pageResult.setData(orderInfos);
+        pageResult.setTotal(pageInfo.getTotal());
+        return ClubResult.ok(pageResult);
     }
 }

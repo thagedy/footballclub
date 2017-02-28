@@ -71,9 +71,18 @@ public class WeChatController {
         out = null;
     }
 
+    @GetMapping("/order/list")
+    public ClubResult listByOpenId(@RequestParam(value = "start",defaultValue = "1") int start,
+                                   @RequestParam(value = "count",defaultValue = "10") int count,
+                                   @RequestParam(value = "openId") String openId){
+        ClubResult clubResult = orderInfoService.listByOpenId(start, count, openId);
+        return clubResult;
+    }
+
     @GetMapping("/userAuth")
     public void userAuth(HttpServletRequest request, HttpServletResponse response){
         try {
+            String menu = request.getParameter("menu");
             //授权后要跳转的链接
             String backUri = baseUrl + "/wx/getOpenId";
             //URLEncoder.encode 后可以在backUri 的url里面获取传递的所有参数
@@ -81,7 +90,7 @@ public class WeChatController {
             //scope 参数视各自需求而定，这里用scope=snsapi_base 不弹出授权页面直接授权目的只获取统一支付接口的openid
             String url = "https://open.weixin.qq.com/connect/oauth2/authorize?" +
                     "appid=" + WxPayConfig.appid +
-                    "&redirect_uri=" + backUri +
+                    "&redirect_uri=" + backUri + "?menu="+menu +
                     "&response_type=code&scope=snsapi_userinfo&state=123#wechat_redirect";
             System.out.println("微信授权url:" + url);
             response.sendRedirect(url);
@@ -99,9 +108,11 @@ public class WeChatController {
     @GetMapping("/getOpenId")
     public void getOpenId(HttpServletRequest request,HttpServletResponse response) {
 
-        String url = baseUrl + "/Views/payment.html?openid=";
+        String urlForm = baseUrl + "/Views/payment.html?openid=";
+        String urlList = baseUrl + "/Views/orderlist.html?openid=";
         //网页授权后获取传递的参数
         String code = request.getParameter("code");
+        String urlType = request.getParameter("menu");
         System.out.println("code:" + code);
 
         //获取统一下单需要的openid
@@ -115,7 +126,11 @@ public class WeChatController {
             openId = jsonObject.getString("openid");
             System.out.println("openId:" + openId);
             try {
-                response.sendRedirect(url+openId);
+                if ("1".equals(urlType)){
+                    response.sendRedirect(urlList+openId);
+                }else {
+                    response.sendRedirect(urlForm+openId);
+                }
             } catch (IOException e1) {
                 e1.printStackTrace();
                 logger.error("footballclub项目中，回掉方法跳转注册页失败",e1);

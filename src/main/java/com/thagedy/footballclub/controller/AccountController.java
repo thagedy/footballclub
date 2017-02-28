@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * Created by Kaijia Wei on 2017/2/21.
  */
@@ -21,7 +23,7 @@ public class AccountController {
 
     @PostMapping("/aj/login")
     @ResponseBody
-    public  ClubResult login(@RequestBody AdminUser adminUser){
+    public  ClubResult login(@RequestBody AdminUser adminUser, HttpServletRequest request){
         ClubResult login = userInfoService.login(adminUser);
         return  login;
     }
