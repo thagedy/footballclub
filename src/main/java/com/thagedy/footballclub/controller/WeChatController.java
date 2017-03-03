@@ -23,7 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -152,7 +151,7 @@ public class WeChatController {
         String spbill_create_ip = request.getRemoteAddr();
         //总金额
         //TODO
-        Integer total_fee = Integer.parseInt(totalFee);
+        Integer total_fee = orderInfo.getPayFee().intValue();
         //商户号
         String mch_id = WxPayConfig.partner;
         //子商户号  非必输
@@ -258,7 +257,7 @@ public class WeChatController {
         resultMap.put("paySign", finalsign);
         resultMap.put("bizOrderId", orderNo);
         resultMap.put("orderId", orderNo);
-        resultMap.put("payPrice", total_fee);
+        resultMap.put("payPrice", orderInfo.getPayFee().intValue());
         resultMap.put("signType",WxPayConfig.signType);
 		return ClubResult.ok(resultMap);
     }
@@ -377,10 +376,10 @@ public class WeChatController {
             e.printStackTrace();
         }*/
         orderInfo.setCtime(new Date());
+        orderInfo.setStudentSchool("中关村二小");
         //转换成元
-        BigDecimal v = new BigDecimal(totalFee);
-        orderInfo.setPayFee(v.divide(new BigDecimal(100)));
         orderInfoService.saveOrderInfo(orderInfo);
+
         pageResult.setPayStatus(1);
         pageResult.setOrderNo(orderInfo.getOrderNo());
         return ClubResult.ok(pageResult);
