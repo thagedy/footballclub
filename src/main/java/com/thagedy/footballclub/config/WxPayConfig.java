@@ -33,7 +33,7 @@ public class WxPayConfig {
 	/**
 	 * 微信授权回跳连接
 	 */
-	public static String baseUrl = "http://weixin.synapse.xin";
+	public static String baseUrl = "http://weixin.hongenfootball.cn";
 
 	public static String genOrderNo(){
 		String orderNo = "xf";
